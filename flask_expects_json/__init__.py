@@ -5,9 +5,10 @@ from flask import request, g, abort, current_app
 
 from jsonschema import validate, ValidationError, FormatChecker
 from .default_validator import ExtendedDefaultValidator
+from .trim_validator import ExtendedTrimValidator
 
 
-def expects_json(schema=None, force=False, fill_defaults=False, ignore_for=None, check_formats=False):
+def expects_json(schema=None, force=False, trim=False, fill_defaults=False, ignore_for=None, check_formats=False):
     if schema is None:
         schema = dict()
     if ignore_for is not None:
@@ -36,7 +37,9 @@ def expects_json(schema=None, force=False, fill_defaults=False, ignore_for=None,
                     return abort(400, 'check_format must be bool or iterable')
 
             try:
-                if fill_defaults:
+                if trim:
+                    ExtendedTrimValidator(schema, format_checker=format_checker).validate()
+                elif fill_defaults:
                     ExtendedDefaultValidator(schema, format_checker=format_checker).validate(data)
                 else:
                     validate(data, schema, format_checker=format_checker)
